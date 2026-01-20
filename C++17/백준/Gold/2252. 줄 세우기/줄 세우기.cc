@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <queue>
 using namespace std;
 
 int main() {
@@ -23,27 +24,26 @@ int main() {
             D[adj[i][j]]++;
         }
     }
+    queue<int> q;
+    for (int i = 1; i <= N; ++i) {
+        if (!D[i]) {
+            q.push(i);
+        }
+    }
 
     int select;
     std::vector<int> answer;
-    bool find;
-    while (true) {
-        find = false;
-        for (int i = 1; i <= N; ++i) {
-            if (D[i] == 0) {
-                select = i;
-                D[i]--;
-                answer.push_back(select);
-                find = true;
-                break;
+    while (!q.empty()) {
+        select = q.front();
+        D[select]--;
+        answer.push_back(select);
+        q.pop();
+
+        for (int i = 0; i < adj[select].size(); ++i) {
+            D[adj[select][i]]--;
+            if (!D[adj[select][i]]) {
+                q.push(adj[select][i]);
             }
-        }
-        if (find){
-            for(int i = 0; i < adj[select].size(); ++i) {
-                D[adj[select][i]]--;
-            }
-        } else {
-            break;
         }
     }
     for (int i = 0; i < answer.size(); ++i) {
