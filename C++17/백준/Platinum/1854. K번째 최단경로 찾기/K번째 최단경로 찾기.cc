@@ -1,3 +1,5 @@
+// k번째를 구하기 위해 최대힙 사용해서 다익스트라 배열에 넣는데,
+// visitCount 배열로 이를 컨트롤한다.
 #include <iostream>
 #include <queue>
 #include <vector>
@@ -5,76 +7,71 @@
 #include <climits>
 
 using namespace std;
-typedef pair<int, int> edge;
-typedef priority_queue<int> que;
 
-// 최소힙이 아니라 .. 최대힙으로 넣어서 K번까지만 노드에 방문하게 한 후, 탑을 리턴하자.
+typedef pair<int, int> edge;
+typedef priority_queue<int> maxHeap; // ans 배열에 값으로 사용. ans[i].top() 은 k번째 최단경로
 
 int main() {
     ios::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
+
     int V, E, K;
     cin >> V >> E >> K;
 
+    vector<int> visitCount(V + 1);
+    vector<maxHeap> ans(V + 1);
     vector<vector<edge>> adj(V + 1);
-    vector<que> dijkstra(V + 1); // 나중에 k번째니까 바꿔야 함.
-//    vector<bool> visit(V + 1, false); => 방문 여부로만 말고, 방문횟수 카운드를 하자.
-    vector<int> visitCount(V + 1, 0);
-    priority_queue<edge, vector<edge>, greater<edge>> q;
+    priority_queue<edge, vector<edge>, greater<edge>> priQue; // 알고리즘용 q로 사용.
+
+    for (int i = 1; i <= V; ++i) {
+        visitCount[i] = 0;
+    }
+
+    maxHeap tempMaxHeap;
+    tempMaxHeap.push(0);
+    ans[1] = tempMaxHeap;
+    for (int i = 2; i <= V; ++i) {
+        maxHeap temp;
+        temp.push(INT_MAX);
+        ans[i] = temp;
+    }
 
     for (int i = 1; i <= E; ++i) {
-        int v1, v2, d;
-        cin >> v1 >> v2 >> d;
-        edge temp = edge(d,v2);
-        adj[v1].push_back(temp);
+        int v1, v2, value;
+        cin >> v1 >> v2 >> value;
+        adj[v1].push_back(edge(value, v2));
     }
 
-    que firstQ;
-    firstQ.push(0);
-    dijkstra[1] = firstQ;
-    q.push(edge(0, 1));
+    priQue.push(edge(0, 1));
 
-    for (int i = 2; i <= V; ++i) {
-        que Q;
-        Q.push(INT_MAX);
-        dijkstra[i] = Q;
-    }
+    while (!priQue.empty()) {
+        int curDistance = priQue.top().first;
+        int curNode = priQue.top().second;
+        priQue.pop();
+        if (visitCount[curNode] >= K) continue;
+        visitCount[curNode]++;
 
-    while (!q.empty()) {
-//        for (int i = 1; i <= V; ++i) {
-//            cout << dijkstra[i].top() << ' ';
-//        } cout << '\n';
-
-        int curNodeNumber = q.top().second;
-        int curDistance = q.top().first;
-
-        visitCount[curNodeNumber]++;
-        q.pop();
-
-        for (int i = 0; i < adj[curNodeNumber].size(); ++i) {
-            int nextNodeNumber = adj[curNodeNumber][i].second;
-            int curToNextDistance = adj[curNodeNumber][i].first;
-            if (dijkstra[nextNodeNumber].size() < K) {
-                // 무조건 추가.
-                if (dijkstra[nextNodeNumber].top() == INT_MAX)
-                    dijkstra[nextNodeNumber].pop();
-                q.push(edge(curDistance + curToNextDistance, nextNodeNumber));
-                dijkstra[nextNodeNumber].push(curDistance + curToNextDistance);
+        for (int i = 0; i < adj[curNode].size(); ++i) {
+            int curToNextDistance = adj[curNode][i].first;
+            int nextNode = adj[curNode][i].second;
+            if (ans[nextNode].size() < K) {
+                if (ans[nextNode].top() == INT_MAX) ans[nextNode].pop();
+                ans[nextNode].push(curToNextDistance + curDistance);
+                priQue.push(edge(curToNextDistance + curDistance, nextNode));
             } else {
-                if (curDistance + curToNextDistance < dijkstra[nextNodeNumber].top()) {
-                    dijkstra[nextNodeNumber].pop();
-                    dijkstra[nextNodeNumber].push(curDistance + curToNextDistance);
-                    q.push(edge(curDistance + curToNextDistance, nextNodeNumber));
+                if (curToNextDistance + curDistance < ans[nextNode].top()) {
+                    ans[nextNode].pop();
+                    ans[nextNode].push(curToNextDistance + curDistance);
+                    priQue.push(edge(curToNextDistance + curDistance, nextNode));
                 }
             }
-
         }
     }
 
     for (int i = 1; i <= V; ++i) {
-        if (visitCount[i] >= K) {
-            cout << dijkstra[i].top() << '\n';
+        if (ans[i].size() >= K) {
+            cout << ans[i].top() << '\n';
         } else {
             cout << -1 << '\n';
         }
