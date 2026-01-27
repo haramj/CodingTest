@@ -15,59 +15,36 @@ typedef pair<int, int> newInfo; // first newIsland second distance
 static int N;
 static int M;
 
+static vector<int> dRow = {-1, 1, 0, 0};
+static vector<int> dCol = {0, 0, -1, 1};
+
 struct compare {
     bool operator() (edge e1, edge e2) { // 오름차순 큐 최소힙
         return get<2>(e1) > get<2>(e2);
     }
 };
 
-vector<newInfo> BFS(vector<vector<int>> &v, int i, int j) { // (i, j) // output (island, distance)
-    vector<newInfo> answer = {newInfo(0,0),newInfo(0,0),newInfo(0,0),newInfo(0,0)};
-    queue<pos> q;
-    if (i - 1 >= 1 && v[i - 1][j] == 0) {
-        q.push(pos(i - 1, j, 0, 0)); // 0 i, 1 j, 2 방향, 3 distance
-    } if (i + 1 <= N && v[i + 1][j] == 0) {
-        q.push(pos(i + 1, j, 1, 0));
-    } if (j - 1 >= 1 && v[i][j - 1] == 0) {
-        q.push(pos(i, j - 1, 2, 0));
-    } if (j + 1 <= M && v[i][j + 1] == 0) {
-        q.push(pos(i, j + 1, 3, 0));
-    }
+vector<newInfo> findBridge(vector<vector<int>> &v, int i, int j) { // (i, j) // output (island, distance)
+    vector<newInfo> answer = {newInfo(0,0), newInfo(0,0), newInfo(0,0), newInfo(0,0)}; // 상하좌우 순.
+    for (int d = 0; d < 4; ++d) {
+        int s = 0;
+        int nextRow = i + dRow[d];
+        int nextCol = j + dCol[d];
 
-    while (!q.empty()) {
-        pos curPos = q.front();
-        int curDis = get<3>(curPos);
-        int curDirect = get<2>(curPos);
-        int row = get<0>(curPos);
-        int col = get<1>(curPos);
-        q.pop();
-        if (v[row][col]) {
-            if (curDis >= 2) {
-                answer[curDirect].first = v[row][col];
-                answer[curDirect].second = curDis;
+        while (nextRow >= 1 && nextRow <= N && nextCol >= 1 && nextCol <= M) {
+            if (v[nextRow][nextCol]){ // && 막 쓰지 않기. 우선 분기 조절 후 나중에 해도 늦지 않는다.
+                if (v[nextRow][nextCol] != v[i][j]) {
+                    if (s >= 2) {
+                        answer[d] = newInfo(v[nextRow][nextCol], s);
+                    }
+                }
+                break;
             }
-            continue;
-        }
-
-        if (get<2>(curPos) == 0) { // 상
-            if (row - 1 >= 1) {
-                q.push(pos(row - 1, col, get<2>(curPos), curDis + 1));
-            }
-        } else if (get<2>(curPos) == 1) { // 하
-            if (row + 1 <= N) {
-                q.push(pos(row + 1, col, get<2>(curPos), curDis + 1));
-            }
-        } else if (get<2>(curPos) == 2) { // 좌
-            if (col - 1 >= 1) {
-                q.push(pos(row, col - 1, get<2>(curPos), curDis + 1));
-            }
-        } else if (get<2>(curPos) == 3) { // 우
-            if (col + 1 <= M) {
-                q.push(pos(row, col + 1, get<2>(curPos), curDis + 1));
-            }
+            s++;
+            nextRow += dRow[d];
+            nextCol += dCol[d];
         }
     }
-
     return answer;
 }
 
@@ -101,8 +78,6 @@ int main() {
     int island = 0;
     // BFS 방식 활용(방문여부) + 방향벡터 활용.
     vector<vector<bool>> visit(N + 1, vector<bool>(M + 1));
-    vector<int> dr = {-1, 1, 0, 0};
-    vector<int> dc = {0, 0, -1, 1};
     for (int i = 1; i <= N; ++i) {
         for (int j = 1; j <= M; ++j) {
             if (v[i][j] && !visit[i][j]) { // 현재가 처음 방문한 땅인 경우. (새로운 땅)
@@ -116,8 +91,8 @@ int main() {
                     v[curRow][curCol] = island;
                     q.pop();
                     for (int k = 0; k < 4; ++k) {
-                        int nextRow = curRow + dr[k];
-                        int nextCol = curCol + dc[k];
+                        int nextRow = curRow + dRow[k];
+                        int nextCol = curCol + dCol[k];
                         if (nextRow >= 1 && nextRow <= N && nextCol >= 1 && nextCol <= M && v[nextRow][nextCol] && !visit[nextRow][nextCol]) {
                             visit[nextRow][nextCol] = true;
                             q.push(pair<int,int>(nextRow, nextCol));
@@ -127,12 +102,6 @@ int main() {
             }
         }
     }
-
-//    for (int i = 1; i <= N; ++i) {
-//        for (int j = 1; j <= M; ++j) {
-//            cout << v[i][j] << " ";
-//        } cout << "\n";
-//    }
 
     priority_queue<edge, vector<edge>, compare> edges; // v
     vector<int> D(island + 1); // v
@@ -144,7 +113,7 @@ int main() {
     for (int i = 1; i <= N; ++i) {
         for (int j = 1; j <= M; ++j) {
             if (v[i][j]) { // v[i][j] 는 시작노드. edge(v[i][j], "BFS로 닿은 도착노드", "거리")
-                vector<newInfo> temp = BFS(v, i, j); // 상하좌우 BFS
+                vector<newInfo> temp = findBridge(v, i, j); // 상하좌우 BFS
                 for (int k = 0; k < 4; ++k) {
                     if (temp[k].first) {
                         edges.push(edge(v[i][j], temp[k].first, temp[k].second));
