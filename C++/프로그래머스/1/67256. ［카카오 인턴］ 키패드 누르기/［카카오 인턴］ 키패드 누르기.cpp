@@ -2,6 +2,7 @@
 #include <vector>
 #include <utility>
 #include <iostream>
+#include <cstdlib>
 
 using namespace std;
 
@@ -41,9 +42,9 @@ string solution(vector<int> numbers, string hand) {
                 nextPos = pos(numbers[i] / 3, 1);
             }
             
-            int leftDistance = ((nextPos.first - left.first >= 0) ? (nextPos.first - left.first) : (-1)*(nextPos.first - left.first)) + ((nextPos.second - left.second >= 0) ? (nextPos.second - left.second) : (-1)*(nextPos.second - left.second));
-            int rightDistance = ((nextPos.first - right.first >= 0) ? (nextPos.first - right.first) : (-1)*(nextPos.first - right.first)) + ((nextPos.second - right.second >= 0) ? (nextPos.second - right.second) : (-1)*(nextPos.second - right.second));
-            
+            int leftDistance = abs(nextPos.first - left.first) + abs(nextPos.second - left.second);
+            int rightDistance = abs(nextPos.first - right.first) + abs(nextPos.second - right.second);
+                
             if (leftDistance > rightDistance) {
                 answer += 'R';
                 right.first = nextPos.first;
