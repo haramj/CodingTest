@@ -1,58 +1,68 @@
-// 방문할 수 있는 정점이 여러 개인 경우에는 정점 번호가 작은 것을 먼저 방문
-// 양방향 !
 #include <iostream>
-#include <queue>
 #include <vector>
+#include <queue>
 #include <algorithm>
 
-static std::vector<std::vector<int>> adj;
-static std::vector<int> visit;
-static std::queue<int> q;
+using namespace std;
 
-void DFS(int v) {
-    visit[v] = true;
-    std::cout << v << ' ';
-    std::sort(adj[v].begin(), adj[v].end());
-    for (int i = 0; i < adj[v].size(); ++i) {
-        if (visit[adj[v][i]] == false) {
-            visit[adj[v][i]] = true;
-            DFS(adj[v][i]);
-        }
-    }
-}
+static int N, M, V;
+static vector<bool> visited;
+static vector<vector<int>> adj;
 
-void BFS(int v) {
-    visit[v] = true;
-    q.push(v);
-    while (!q.empty()) {
-        int temp = q.front();
-        std::cout << temp << ' ';
-        q.pop();
-        std::sort(adj[temp].begin(), adj[temp].end());
-        for (int i = 0; i < adj[temp].size(); ++i) {
-            if (visit[adj[temp][i]] == false) {
-                q.push(adj[temp][i]);
-                visit[adj[temp][i]] = true;
-            }
+void DFS(int cur) {
+    cout << cur << ' ';
+
+    visited[cur] = true;
+
+    for (int i = 0; i < adj[cur].size(); ++i) {
+        if (!visited[adj[cur][i]]) {
+            DFS(adj[cur][i]);
         }
     }
 }
 
 int main() {
-    int N, M, V; // 정점개수 간선개수 탐색시작할번호
-    std::cin >> N >> M >> V;
-    adj = std::vector<std::vector<int>>(N + 1);
-    q = std::queue<int>();
+    ios::sync_with_stdio(false);
+    cin.tie(NULL);
+    cout.tie(NULL);
+
+    cin >> N >> M >> V;
+
+    adj = vector<vector<int>>(N + 1);
+
     for (int i = 0; i < M; ++i) {
-        int v1, v2;
-        std::cin >> v1 >> v2;
-        adj[v1].push_back(v2);
-        adj[v2].push_back(v1);
+        int s, e;
+        cin >> s >> e;
+        adj[s].push_back(e);
+        adj[e].push_back(s);
     }
 
-    visit = std::vector<int>(N + 1, false);
+    for (int i = 1; i <= N; ++i) {
+        sort(adj[i].begin(), adj[i].end());
+    }
+
+    // DFS
+    visited = vector<bool>(N + 1, false);
     DFS(V);
-    visit = std::vector<int>(N + 1, false);
-    std::cout << '\n';
-    BFS(V);
+
+    cout << '\n';
+
+    // BFS
+    visited = vector<bool>(N + 1, false);
+    queue<int> q;
+    q.push(V);
+    visited[V] = true;
+    while (!q.empty()) {
+        int cur = q.front();
+        q.pop();
+        cout << cur << ' ';
+        for (int i = 0; i < adj[cur].size(); ++i) {
+            if (!visited[adj[cur][i]]) {
+                visited[adj[cur][i]] = true;
+                q.push(adj[cur][i]);
+            }
+        }
+    }
+
+    return 0;
 }
