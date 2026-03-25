@@ -1,49 +1,48 @@
 #include <iostream>
 #include <vector>
 #include <queue>
-#include <algorithm>
 #include <utility>
+#include <algorithm>
 
 using namespace std;
 
-static vector<int> answer; // 단지 배열
-static vector<vector<int>> board; // 보드
+typedef pair<int, int> pos; // row , col
+
+static vector<vector<int>> board;
 static vector<vector<bool>> visited;
-static int cnt = 0;
-static int N; // 지도 크기
+static vector<int> v; // 단지 내 집들 수
 
 static vector<int> dr = {-1, 1, 0, 0};
 static vector<int> dc = {0, 0, -1, 1};
 
-typedef pair<int, int> pos; // r, c
+static int N;
 
-void BFS(int r, int c) {
-    // cnt 가 개수. !!
-    int size = 0;
+void bfs(int row, int col) {
     queue<pos> q;
-    q.push(pos(r, c));
-    visited[r][c] = true;
-    size++;
+
+    int cnt = 1;
+    q.push(pos(row, col));
+    visited[row][col] = true;
 
     while (!q.empty()) {
         pos cur = q.front();
-        int row = cur.first;
-        int col = cur.second;
         q.pop();
 
         for (int i = 0; i < 4; ++i) {
-            if (row + dr[i] >= 0 && row + dr[i] < N \
-                && col + dc[i] >= 0 && col + dc[i] < N \
-                && !visited[row + dr[i]][col + dc[i]] \
-                && board[row + dr[i]][col + dc[i]] != 0) {
-                q.push(pos(row + dr[i], col + dc[i]));
-                visited[row + dr[i]][col + dc[i]] = true;
-                size++;
+            int nRow = cur.first + dr[i];
+            int nCol = cur.second + dc[i];
+            if (nRow >= 0 && nRow <= N - 1 \
+                && nCol >= 0 && nCol <= N - 1 \
+                && !visited[nRow][nCol] && board[nRow][nCol] == 1
+            ) {
+                cnt++;
+                q.push(pos(nRow, nCol));
+                visited[nRow][nCol] = true;
             }
         }
     }
 
-    answer.push_back(size);
+    v.push_back(cnt);
 }
 
 int main() {
@@ -52,32 +51,30 @@ int main() {
     cout.tie(NULL);
 
     cin >> N;
+
     board = vector<vector<int>>(N, vector<int>(N, 0));
     visited = vector<vector<bool>>(N, vector<bool>(N, false));
 
     for (int i = 0; i < N; ++i) {
-        string row;
-        cin >> row;
+        string temp;
+        cin >> temp;
         for (int j = 0; j < N; ++j) {
-            board[i][j] = (int)(row[j] - 48);
+            board[i][j] = (int)(temp[j] - 48);
         }
     }
 
     for (int i = 0; i < N; ++i) {
         for (int j = 0; j < N; ++j) {
-            if (!visited[i][j] && board[i][j] != 0) {
-                cnt++;
-                BFS(i, j);
+            if (board[i][j] == 1 && !visited[i][j]) {
+                bfs(i, j);
             }
         }
     }
 
-    sort(answer.begin(), answer.end());
-
-    cout << cnt << '\n';
-    for (int i = 0; i < answer.size(); ++i) {
-        cout << answer[i] << '\n';
+    cout << v.size() << '\n';
+    sort(v.begin(), v.end());
+    for (int i = 0; i < v.size(); ++i) {
+        cout << v[i] << '\n';
     }
-
     return 0;
 }
